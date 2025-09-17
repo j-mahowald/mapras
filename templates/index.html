@@ -266,11 +266,23 @@
                 const sourceIcon = result.type === 'url' ? '🌐' : '📁';
                 const originalUrl = result.original_url || 'URL not available';
 
+                // Construct image preview HTML if image_path exists
+                const imagePreview = result.image_path ?
+                    `<div style="margin-top: 15px;">
+                        <img src="/${result.image_path}" alt="${result.title}"
+                             style="max-width: 100%; max-height: 400px; border: 1px solid #ddd; border-radius: 4px;"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div style="display: none; background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-top: 5px;">
+                            Image preview not available: /${result.image_path}
+                        </div>
+                    </div>` : '';
+
                 div.innerHTML = `
                     <div class="result-header">
                         <div class="result-title">${sourceIcon} ${result.title}</div>
                         <div class="result-score">Rank ${result.rank} | Score: ${result.score.toFixed(3)}</div>
                     </div>
+                    ${imagePreview}
                     <div class="result-url">
                         <strong>Original URL:</strong><br>
                         <a href="${originalUrl}" target="_blank" rel="noopener noreferrer">${originalUrl}</a>

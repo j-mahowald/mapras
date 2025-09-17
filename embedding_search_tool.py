@@ -168,12 +168,15 @@ class EmbeddingSearchTool:
 		print(f"\nTop {k} matches for '{query}' in original embeddings:")
 		for i, (idx, score) in enumerate(zip(top_k_indices, top_k_scores)):
 			doc = self.original_documents[idx]
+			# Construct image path directly from images directory using the title as filename
+			direct_image_path = os.path.join('images', doc['title']) if doc['title'] else ''
+
 			result = {
 				'rank': i + 1,
 				'score': float(score),
 				'title': doc['title'],
 				'source': doc['source'],
-				'image_path': doc.get('image_path', ''),
+				'image_path': direct_image_path,  # Use direct path to images directory
 				'original_url': doc.get('original_url', ''),
 				'type': 'original'
 			}
@@ -334,12 +337,15 @@ class EmbeddingSearchTool:
 		print(f"\nTop {k} matches for '{query}' in merged embeddings:")
 		for i, (idx, score) in enumerate(zip(top_k_indices, top_k_scores)):
 			doc = self.merged_documents[idx]
+			# Construct image path directly from images directory using the title as filename
+			direct_image_path = os.path.join('images', doc['title']) if doc['title'] else ''
+
 			result = {
 				'rank': i + 1,
 				'score': float(score),
 				'title': doc['title'],
 				'source': doc['source'],
-				'image_path': doc.get('image_path', ''),
+				'image_path': direct_image_path,  # Use direct path to images directory
 				'original_url': doc.get('original_url', ''),
 				'type': doc.get('type', 'original')
 			}
