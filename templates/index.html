@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColPali Visual Search</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; margin-bottom: 30px; color: #2c3e50; }
+        
+        .search-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .search-form { display: flex; gap: 10px; margin-bottom: 15px; }
+        .search-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #545b62; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #1e7e34; }
+        
+        .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .k-input { width: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        
+        .url-section { background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .url-form { display: flex; flex-direction: column; gap: 10px; }
+        .url-input { padding: 12px; border: 1px solid #ddd; border-radius: 4px; }
+        .url-buttons { display: flex; gap: 10px; }
+        
+        .stats { background: #fff3cd; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+        .stat-item { font-weight: bold; }
+        
+        .loading { text-align: center; color: #666; margin: 20px 0; }
+        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        
+        .results { margin-top: 30px; }
+        .result-item { background: white; border: 1px solid #eee; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .result-title { font-size: 18px; font-weight: bold; color: #2c3e50; }
+        .result-score { background: #e9ecef; padding: 4px 8px; border-radius: 12px; font-size: 12px; color: #495057; }
+        .result-url { background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 10px; }
+        .result-url a { color: #007bff; text-decoration: none; word-break: break-all; }
+        .result-url a:hover { text-decoration: underline; }
+        .result-info { color: #666; font-size: 14px; }
+        .result-source { font-family: monospace; background: #f1f1f1; padding: 2px 6px; border-radius: 3px; }
+        
+        .hidden { display: none; }
+        
+        @media (max-width: 768px) {
+            .search-form, .url-buttons { flex-direction: column; }
+            .controls { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 ColPali Visual Search</h1>
+        
+        <!-- Search Section -->
+        <div class="search-section">
+            <form class="search-form" id="searchForm">
+                <input type="text" class="search-input" id="queryInput" placeholder="Enter your search query" required>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+            <div class="controls">
+                <label for="kInput">Results:</label>
+                <input type="number" class="k-input" id="kInput" value="5" min="1" max="20">
+                <label>
+                    <input type="checkbox" id="useMerged"> Use Merged Embeddings
+                </label>
+                <button type="button" class="btn btn-secondary" id="statsBtn">Show Stats</button>
+            </div>
+        </div>
+        
+        <!-- URL Addition Section -->
+        <div class="url-section">
+            <h3>Add Images from URLs</h3>
+            <form class="url-form" id="urlForm">
+                <input type="text" class="url-input" id="urlInput" placeholder="Enter image URLs (one per line)" rows="3">
+                <input type="text" class="url-input" id="titleInput" placeholder="Enter titles (one per line, optional)">
+                <div class="url-buttons">
+                    <button type="submit" class="btn btn-primary">Add URLs</button>
+                    <button type="button" class="btn btn-success" id="mergeBtn">Create Merged Embeddings</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Stats Section -->
+        <div id="statsSection" class="stats hidden">
+            <div class="stats-grid">
+                <div class="stat-item">Original Embeddings: <span id="originalCount">-</span></div>
+                <div class="stat-item">Merged Embeddings: <span id="mergedCount">-</span></div>
+                <div class="stat-item">Total Corpus Size: <span id="corpusSize">-</span></div>
+                <div class="stat-item">Merged File Exists: <span id="mergedExists">-</span></div>
+            </div>
+        </div>
+        
+        <!-- Messages -->
+        <div id="messages"></div>
+        
+        <!-- Loading -->
+        <div id="loading" class="loading hidden">Processing...</div>
+        
+        <!-- Results -->
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        // Elements
+        const searchForm = document.getElementById('searchForm');
+        const queryInput = document.getElementById('queryInput');
+        const kInput = document.getElementById('kInput');
+        const useMerged = document.getElementById('useMerged');
+        const statsBtn = document.getElementById('statsBtn');
+        const urlForm = document.getElementById('urlForm');
+        const urlInput = document.getElementById('urlInput');
+        const titleInput = document.getElementById('titleInput');
+        const mergeBtn = document.getElementById('mergeBtn');
+        const statsSection = document.getElementById('statsSection');
+        const messages = document.getElementById('messages');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        
+        // Utility functions
+        function showLoading() {
+            loading.classList.remove('hidden');
+        }
+        
+        function hideLoading() {
+            loading.classList.add('hidden');
+        }
+        
+        function showMessage(message, type = 'error') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = message;
+            messages.appendChild(div);
+            setTimeout(() => div.remove(), 5000);
+        }
+        
+        function clearMessages() {
+            messages.innerHTML = '';
+        }
+        
+        // API calls
+        async function apiCall(endpoint, options = {}) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, {
+                    headers: { 'Content-Type': 'application/json' },
+                    ...options
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'API request failed');
+                return data;
+            } catch (error) {
+                throw new Error(error.message || 'Network error');
+            }
+        }
+        
+        // Search functionality
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+            showLoading();
+            
+            try {
+                const query = queryInput.value.trim();
+                const k = parseInt(kInput.value);
+                const merged = useMerged.checked;
+                
+                const data = await apiCall('/search', {
+                    method: 'POST',
+                    body: JSON.stringify({ query, k, use_merged: merged })
+                });
+                
+                displayResults(data.results);
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Stats functionality
+        statsBtn.addEventListener('click', async () => {
+            clearMessages();
+            showLoading();
+            
+            try {
+                const data = await apiCall('/stats');
+                document.getElementById('originalCount').textContent = data.original_embeddings;
+                document.getElementById('mergedCount').textContent = data.merged_embeddings;
+                document.getElementById('corpusSize').textContent = data.corpus_size || data.original_embeddings;
+                document.getElementById('mergedExists').textContent = data.merged_file_exists ? 'Yes' : 'No';
+                statsSection.classList.remove('hidden');
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // URL addition functionality
+        urlForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+            showLoading();
+            
+            try {
+                const urls = urlInput.value.split('\n').map(u => u.trim()).filter(u => u);
+                const titles = titleInput.value.split('\n').map(t => t.trim()).filter(t => t);
+                
+                if (urls.length === 0) {
+                    throw new Error('Please enter at least one URL');
+                }
+                
+                const data = await apiCall('/add_urls', {
+                    method: 'POST',
+                    body: JSON.stringify({ urls, titles })
+                });
+                
+                showMessage(`Successfully added ${data.count} images`, 'success');
+                urlInput.value = '';
+                titleInput.value = '';
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Merge functionality
+        mergeBtn.addEventListener('click', async () => {
+            clearMessages();
+            showLoading();
+            
+            try {
+                const data = await apiCall('/merge', { method: 'POST' });
+                showMessage(`Merged embeddings created with ${data.total_embeddings} embeddings`, 'success');
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+        
+        // Display results
+        function displayResults(resultsList) {
+            results.innerHTML = '';
+            
+            if (!resultsList || resultsList.length === 0) {
+                results.innerHTML = '<p style="text-align: center; color: #666;">No results found</p>';
+                return;
+            }
+            
+            resultsList.forEach(result => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                
+                const sourceIcon = result.type === 'url' ? '🌐' : '📁';
+                const originalUrl = result.original_url || 'URL not available';
+
+                div.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-title">${sourceIcon} ${result.title}</div>
+                        <div class="result-score">Rank ${result.rank} | Score: ${result.score.toFixed(3)}</div>
+                    </div>
+                    <div class="result-url">
+                        <strong>Original URL:</strong><br>
+                        <a href="${originalUrl}" target="_blank" rel="noopener noreferrer">${originalUrl}</a>
+                    </div>
+                    <div class="result-info">
+                        <strong>Source:</strong> <span class="result-source">${result.source}</span><br>
+                        <strong>Type:</strong> ${result.type}
+                        ${result.image_path ? `<br><strong>Path:</strong> <span class="result-source">${result.image_path}</span>` : ''}
+                    </div>
+                `;
+                
+                results.appendChild(div);
+            });
+        }
+        
+        
+        // Load stats on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            statsBtn.click();
+        });
+    </script>
+</body>
+</html>

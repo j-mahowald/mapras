@@ -1,0 +1,13 @@
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pkl
+*safetensors
+*.DS_Store
+__pycache__/
+*.csv
+list_to_load*
+merges.txt
+models/*
+url_mapping*
