@@ -11,3 +11,4 @@ list_to_load*
 merges.txt
 models/*
 url_mapping*
+metadata*
