@@ -58,8 +58,8 @@
         .btn-secondary:hover { background: #545b62; }
         .btn-success { background: #dd7a61; color: white; }
         .btn-success:hover { background: #c66b4e; }
-        .btn-info { background: #17a2b8; color: white; }
-        .btn-info:hover { background: #117a8b; }
+        .btn-info { background: #176ab8; color: white; }
+        .btn-info:hover { background: #0d5191; }
         .btn-small { padding: 6px 12px; font-size: 12px; }
 
         .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -108,7 +108,7 @@
         .image-error { background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-top: 5px; font-size: 14px; }
 
         .result-source { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px; margin: 10px 0; }
-        .result-source a { color: #007bff; text-decoration: none; word-break: break-all; }
+        .result-source a { color: #176ab8; text-decoration: none; word-break: break-all; }
         .result-source a:hover { text-decoration: underline; }
         .result-info { color: #666; font-size: 14px; line-height: 1.8; }
         .code-text { font-family: monospace; background: #f1f3f4; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
@@ -587,16 +587,9 @@
                     'original': '📚'
                 }[result.type] || '📄';
 
-                // citation badge if available
-                const citationBadge = result.has_citation
-                    ? '<div class="result-type" style="background: #e8f5e9; color: #2e7d32;">📖 Citation</div>'
-                    : '';
-
-                // original title display if citation is used
-                const originalTitleDisplay = result.has_citation && result.original_title
-                    ? `<div class="result-info" style="margin-top: 10px; font-size: 13px; color: #888;">
-                         Original title: <span class="code-text">${result.original_title}</span>
-                       </div>`
+                // citation button if available - toggle an already-rendered citation DIV so HTML (<cite>) is preserved
+                const citationButton = result.has_citation && result.chicago_citation
+                    ? `<button class="btn btn-small btn-info" onclick="(function(b){const c=b.closest('.result-item').querySelector('.result-citation'); if(c.classList.contains('hidden')){c.classList.remove('hidden'); b.textContent='Hide Citation';} else {c.classList.add('hidden'); b.textContent='Show Citation';}})(this)">Show Citation</button>`
                     : '';
 
                 div.innerHTML = `
@@ -605,21 +598,37 @@
                         <div class="result-badges">
                             <div class="result-score">Rank ${result.rank} | ${result.score.toFixed(3)}</div>
                             <div class="result-type">${result.type}</div>
-                            ${citationBadge}
+                            ${citationButton}
                         </div>
                     </div>
-                    ${originalTitleDisplay}
+                    <div class="result-citation hidden" style="background: #f8f9fa; padding: 10px; margin: 10px 0; border-left: 3px solid #17a2b8; font-size: 14px;">
+                        ${result.chicago_citation || ''}
+                    </div>
                     <div class="result-image">
                         <a href="${getResourceLink(result)}" target="_blank" rel="noopener noreferrer">
                             <img src="${getImageUrl(result)}"
-                                 alt="${result.title}"
-                                 onerror="this.parentElement.innerHTML='<div class=\\'image-error\\'>⚠️ Image failed to load</div>'">
+                                alt="${result.title}"
+                                onerror="this.parentElement.innerHTML='<div class=\\'image-error\\'>⚠️ Image failed to load</div>'">
                         </a>
                     </div>
                 `;
 
                 results.appendChild(div);
             });
+        }
+
+        // toggle citation display
+        function toggleCitation(button, citation) {
+            const citationDiv = button.closest('.result-item').querySelector('.result-citation');
+            
+            if (citationDiv.classList.contains('hidden')) {
+                citationDiv.textContent = citation;
+                citationDiv.classList.remove('hidden');
+                button.textContent = 'Hide Citation';
+            } else {
+                citationDiv.classList.add('hidden');
+                button.textContent = 'Show Citation';
+            }
         }
 
         // helper to determine image URL

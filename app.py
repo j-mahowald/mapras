@@ -3,7 +3,6 @@
 
 import os
 import csv
-import json
 import requests
 from functools import lru_cache
 import traceback
@@ -88,7 +87,7 @@ def load_metadata_csv():
 				if file_url and resource_url and segment_number:
 					metadata_cache[file_url] = {
 						'resource_url': resource_url,
-						'segment_number': int(segment_number)
+						'segment_number': int(segment_number)+1
 					}
 		
 		print(f"Loaded {len(metadata_cache)} metadata entries from CSV")
@@ -164,12 +163,12 @@ def fetch_full_metadata(resource_url, segment_number):
 		return None
 
 def add_citation(result):
-	"""add chicago citation to result if it exists"""
+	"""add chicago citation and real title to result if it exists"""
 	try:
 		csv_url = convert_display_url_to_csv_format(result['source'])
 		metadata = metadata_cache.get(csv_url)
 		
-		if metadata: # need these two to look up json
+		if metadata:
 			result['resource_url'] = metadata['resource_url']
 			result['segment_number'] = metadata['segment_number']
 			
@@ -179,20 +178,28 @@ def add_citation(result):
 				metadata['segment_number']
 			)
 			
+			# fetch full metadata for actual title
+			full_metadata = fetch_full_metadata(
+				metadata['resource_url'],
+				metadata['segment_number']
+			)
+			
 			if citation:
 				result['chicago_citation'] = citation
-				result['original_title'] = result['title']
-				result['title'] = citation # override title with citation
 				result['has_citation'] = True
 			else:
 				result['has_citation'] = False
+			
+			# use actual title from metadata if available
+			if full_metadata and full_metadata.get('title'):
+				result['title'] = full_metadata['title']
 		else:
 			result['has_citation'] = False
 			
 	except Exception as e:
 		print(f"Error enriching result: {e}")
 		result['has_citation'] = False
-	
+
 	return result
 
 def analyze_search_results(query, results):

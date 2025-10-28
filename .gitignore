@@ -3,5 +3,5 @@
 *.DS_Store
 __pycache__/
 *.csv
-.maprag/*
+.mapras/*
 temp*.jpg
