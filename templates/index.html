@@ -3,156 +3,305 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ColPali Visual Search</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,400i,700,700i&subset=latin,latin-ext" type="text/css">
+    <title>MapRAS</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        h1 { text-align: center; margin-bottom: 30px; color: #2c3e50; }
+        body {  font-family: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif; 
+                line-height: 1.6; 
+                color: #333; 
+                background-color: #f5f5f5; 
+                background-image: url('images/star_chart_loc_pct50.jpg');
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+                background-repeat: no-repeat;
+                position: relative;
+            }
         
-        .search-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(245, 245, 245, 0.75); /* Adjust opacity (0.85) to control faintness */
+            pointer-events: none;
+            z-index: 0;
+        }
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            position: relative;
+            z-index: 1;  /* Add this - puts content above the overlay */
+        }
+        h1 { text-align: center; margin-bottom: 10px; color: #2c3e50; }
+        .subtitle { text-align: center; 
+                    color: #666; 
+                    margin-bottom: 30px; 
+                    font-size: 14px; 
+                  }
+
+        .section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .section h3 { margin-bottom: 15px; color: #2c3e50; }
+
         .search-form { display: flex; gap: 10px; margin-bottom: 15px; }
         .search-input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
-        .btn-primary { background: #007bff; color: white; }
-        .btn-primary:hover { background: #0056b3; }
+
+        .btn { padding: 10px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .btn-primary { background: #f05129; color: white; }
+        .btn-primary:hover { background: #be3412; }
         .btn-secondary { background: #6c757d; color: white; }
         .btn-secondary:hover { background: #545b62; }
-        .btn-success { background: #28a745; color: white; }
-        .btn-success:hover { background: #1e7e34; }
-        
+        .btn-success { background: #dd7a61; color: white; }
+        .btn-success:hover { background: #c66b4e; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-info:hover { background: #117a8b; }
+        .btn-small { padding: 6px 12px; font-size: 12px; }
+
         .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         .k-input { width: 60px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        
-        .url-section { background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-        .url-form { display: flex; flex-direction: column; gap: 10px; }
-        .url-input { padding: 12px; border: 1px solid #ddd; border-radius: 4px; }
-        .url-buttons { display: flex; gap: 10px; }
-        
-        .stats { background: #fff3cd; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-        .stat-item { font-weight: bold; }
-        
-        .loading { text-align: center; color: #666; margin: 20px 0; }
-        .error { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; margin: 10px 0; }
-        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin: 10px 0; }
-        
-        .results { margin-top: 30px; }
-        .result-item { background: white; border: 1px solid #eee; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .result-title { font-size: 18px; font-weight: bold; color: #2c3e50; }
-        .result-score { background: #e9ecef; padding: 4px 8px; border-radius: 12px; font-size: 12px; color: #495057; }
-        .result-url { background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 15px; margin-bottom: 10px; }
-        .result-url a { color: #007bff; text-decoration: none; word-break: break-all; }
-        .result-url a:hover { text-decoration: underline; }
-        .result-info { color: #666; font-size: 14px; }
-        .result-source { font-family: monospace; background: #f1f1f1; padding: 2px 6px; border-radius: 3px; }
-        
+
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .text-area { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; resize: vertical; }
+        .input-field { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+
+        .button-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 4px; border-left: 4px solid #f05129; }
+        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; margin-top: 5px; }
+        .type-counts { margin-top: 10px; font-size: 14px; }
+        .type-badge { display: inline-block; background: #e9ecef; padding: 2px 8px; border-radius: 12px; margin-right: 5px; margin-top: 5px; }
+
+        .loading { text-align: center; color: #666; margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 4px; }
+        .loading::after { content: '...'; animation: dots 1.5s infinite; }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .message { padding: 12px 15px; border-radius: 4px; margin: 10px 0; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+        .success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+
+        .results { margin-top: 20px; }
+        .result-item { background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); transition: all 0.2s; }
+        .result-item:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .result-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .result-title { font-size: 18px; font-weight: bold; color: #2c3e50; flex: 1; }
+        .result-badges { display: flex; gap: 8px; align-items: center; }
+        .result-score { background: #e3f2fd; padding: 6px 12px; border-radius: 16px; font-size: 12px; color: #1976d2; font-weight: 600; }
+        .result-type { background: #f3e5f5; padding: 6px 12px; border-radius: 16px; font-size: 12px; color: #7b1fa2; }
+
+        .result-image { margin: 15px 0; text-align: center; }
+        .result-image a { display: inline-block; cursor: pointer; transition: all 0.3s ease; border-radius: 6px; }
+        .result-image a:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+        .result-image img { max-width: 100%; max-height: 400px; border: 2px solid #ddd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+        .result-image a:hover img { border-color: #f05129; }
+        .image-error { background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-top: 5px; font-size: 14px; }
+
+        .result-source { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 12px; margin: 10px 0; }
+        .result-source a { color: #007bff; text-decoration: none; word-break: break-all; }
+        .result-source a:hover { text-decoration: underline; }
+        .result-info { color: #666; font-size: 14px; line-height: 1.8; }
+        .code-text { font-family: monospace; background: #f1f3f4; padding: 2px 6px; border-radius: 3px; font-size: 13px; }
+
         .hidden { display: none; }
-        
+
+        .analysis-section { background: #f8f9fa; border-left: 4px solid #17a2b8; padding: 20px; border-radius: 4px; margin: 20px 0; }
+        .analysis-section h4 { color: #17a2b8; margin-bottom: 10px; }
+        .analysis-text { line-height: 1.8; white-space: pre-wrap; }
+        .analysis-meta { font-size: 12px; color: #666; margin-top: 10px; padding-top: 10px; border-top: 1px solid #dee2e6; }
+
         @media (max-width: 768px) {
-            .search-form, .url-buttons { flex-direction: column; }
+            .search-form, .button-group { flex-direction: column; }
             .controls { justify-content: center; }
+            .result-header { flex-direction: column; }
+            .stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🗺️ The MapRAG 🗾</h1>
-        
-        <!-- Search Section -->
-        <div class="search-section">
-            <form class="search-form" id="searchForm">
-                <input type="text" class="search-input" id="queryInput" placeholder="Enter your search query" required>
-                <button type="submit" class="btn btn-primary">Search</button>
-            </form>
+        <h1>MapRAS Visual Search</h1>
+
+        <!-- search Section -->
+        <div class="section">
+            <h3>Search Documents</h3>
+            
+            <!-- Text Search -->
+            <div id="textSearchDiv">
+                <form class="search-form" id="searchForm">
+                    <input type="text" class="search-input" id="queryInput" placeholder="Enter your search query..." required>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+                <div style="text-align: center; margin: 10px 0; color: #666;">or</div>
+            </div>
+            
+            <!-- Image Search -->
+            <div id="imageSearchDiv">
+                <div class="search-form">
+                    <input type="text" class="search-input" id="imageUrlInput" placeholder="Enter image URL to find similar images...">
+                    <button type="button" class="btn btn-primary" id="imageSearchBtn">Search by Image</button>
+                </div>
+            </div>
+            
             <div class="controls">
                 <label for="kInput">Results:</label>
                 <input type="number" class="k-input" id="kInput" value="5" min="1" max="20">
-                <label>
-                    <input type="checkbox" id="useMerged"> Use Merged Embeddings
-                </label>
-                <button type="button" class="btn btn-secondary" id="statsBtn">Show Stats</button>
+                <button type="button" class="btn btn-secondary btn-small" id="statsBtn">📊 Stats</button>
+                <button type="button" class="btn btn-info btn-small" id="analyzeBtn"><b>Analyze results</b></button>
             </div>
         </div>
-        
-        <!-- URL Addition Section -->
-        <div class="url-section">
-            <h3>Add Images from URLs</h3>
-            <form class="url-form" id="urlForm">
-                <input type="text" class="url-input" id="urlInput" placeholder="Enter image URLs (one per line)" rows="3">
-                <input type="text" class="url-input" id="titleInput" placeholder="Enter titles (one per line, optional)">
-                <div class="url-buttons">
-                    <button type="submit" class="btn btn-primary">Add URLs</button>
-                    <button type="button" class="btn btn-success" id="mergeBtn">Create Merged Embeddings</button>
-                </div>
-            </form>
-        </div>
-        
-        <!-- Stats Section -->
-        <div id="statsSection" class="stats hidden">
-            <div class="stats-grid">
-                <div class="stat-item">Original Embeddings: <span id="originalCount">-</span></div>
-                <div class="stat-item">Merged Embeddings: <span id="mergedCount">-</span></div>
-                <div class="stat-item">Total Corpus Size: <span id="corpusSize">-</span></div>
-                <div class="stat-item">Merged File Exists: <span id="mergedExists">-</span></div>
-            </div>
-        </div>
-        
-        <!-- Messages -->
+
+        <!-- messages -->
         <div id="messages"></div>
-        
-        <!-- Loading -->
-        <div id="loading" class="loading hidden">Processing...</div>
-        
-        <!-- Results -->
+
+        <!-- loading general -->
+        <div id="loading" class="loading hidden">Processing</div>
+
+        <!-- loading model -->
+        <div id="loadingModel" class="loading hidden">Loading model</div>
+
+        <!-- analysis -->
+        <div id="analysisSection" class="analysis-section hidden">
+            <h4>AI Analysis</h4>
+            <div id="analysisText" class="analysis-text"></div>
+            <div id="analysisMeta" class="analysis-meta"></div>
+        </div>
+
+        <!-- results -->
         <div id="results" class="results"></div>
+
+        <!-- corpus management -->
+        <div class="section">
+            <h3>Corpus Management</h3>
+            <div class="button-group">
+                <button type="button" class="btn btn-success" id="loadBtn">Load Corpus</button>
+                <button type="button" class="btn btn-success" id="saveBtn">Save Corpus</button>
+            </div>
+            <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                Note: Default embeddings are loaded automatically on startup
+            </p>
+        </div>
+
+        <!-- add content -->
+        <div class="section">
+            <h3>➕ Add Content</h3>
+            <div class="input-group">
+                <label for="urlInput">Image URLs (one per line):</label>
+                <textarea class="text-area" id="urlInput" placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg" rows="3"></textarea>
+                <label for="titleInput">Titles (one per line, optional):</label>
+                <textarea class="text-area" id="titleInput" placeholder="Image 1&#10;Image 2" rows="3"></textarea>
+                <button type="button" class="btn btn-primary" id="addUrlsBtn">Add URLs</button>
+            </div>
+
+            <div class="input-group" style="margin-top: 20px;">
+                <label for="filePathsInput">Local file paths (one per line):</label>
+                <textarea class="text-area" id="filePathsInput" placeholder="/path/to/image1.jpg&#10;/path/to/image2.jpg" rows="3"></textarea>
+                <label for="fileTitlesInput">Titles (one per line, optional):</label>
+                <textarea class="text-area" id="fileTitlesInput" placeholder="File 1&#10;File 2" rows="3"></textarea>
+                <button type="button" class="btn btn-primary" id="addFilesBtn">Add Files</button>
+            </div>
+
+            <div class="input-group" style="margin-top: 20px;">
+                <label for="pdfPathInput">PDF file path:</label>
+                <input type="text" class="input-field" id="pdfPathInput" placeholder="/path/to/document.pdf">
+                <label for="pdfTitleInput">Title prefix (optional):</label>
+                <input type="text" class="input-field" id="pdfTitleInput" placeholder="Document Title">
+                <button type="button" class="btn btn-primary" id="addPdfBtn">Add PDF</button>
+            </div>
+        </div>
+
+        <!-- stats -->
+        <div id="statsSection" class="section hidden">
+            <h3>📊 Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Embeddings</div>
+                    <div class="stat-value" id="totalCount">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Corpus File</div>
+                    <div class="stat-value" style="font-size: 14px; word-break: break-all;" id="corpusFile">-</div>
+                    <div class="stat-label" style="margin-top: 10px;">Exists: <span id="corpusExists">-</span></div>
+                </div>
+                <div class="stat-card" style="grid-column: 1 / -1;">
+                    <div class="stat-label">Document Types</div>
+                    <div id="typeCounts" class="type-counts">-</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         const API_BASE = '/api';
-        
-        // Elements
+
+        // elements
         const searchForm = document.getElementById('searchForm');
         const queryInput = document.getElementById('queryInput');
         const kInput = document.getElementById('kInput');
-        const useMerged = document.getElementById('useMerged');
         const statsBtn = document.getElementById('statsBtn');
-        const urlForm = document.getElementById('urlForm');
+        const loadBtn = document.getElementById('loadBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const addUrlsBtn = document.getElementById('addUrlsBtn');
         const urlInput = document.getElementById('urlInput');
         const titleInput = document.getElementById('titleInput');
-        const mergeBtn = document.getElementById('mergeBtn');
+        const addFilesBtn = document.getElementById('addFilesBtn');
+        const filePathsInput = document.getElementById('filePathsInput');
+        const fileTitlesInput = document.getElementById('fileTitlesInput');
+        const addPdfBtn = document.getElementById('addPdfBtn');
+        const pdfPathInput = document.getElementById('pdfPathInput');
+        const pdfTitleInput = document.getElementById('pdfTitleInput');
         const statsSection = document.getElementById('statsSection');
         const messages = document.getElementById('messages');
         const loading = document.getElementById('loading');
         const results = document.getElementById('results');
-        
-        // Utility functions
-        function showLoading() {
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analysisSection = document.getElementById('analysisSection');
+        const analysisText = document.getElementById('analysisText');
+        const analysisMeta = document.getElementById('analysisMeta');
+
+        // store last search results for analysis
+        let lastSearchQuery = '';
+        let lastSearchResults = [];
+
+        // utils
+        function showLoading(message = 'Processing') {
+            loading.textContent = message;
             loading.classList.remove('hidden');
         }
-        
+
         function hideLoading() {
             loading.classList.add('hidden');
         }
-        
+
         function showMessage(message, type = 'error') {
             const div = document.createElement('div');
-            div.className = type;
+            div.className = `message ${type}`;
             div.textContent = message;
             messages.appendChild(div);
             setTimeout(() => div.remove(), 5000);
         }
-        
+
         function clearMessages() {
             messages.innerHTML = '';
         }
-        
+
         // API calls
         async function apiCall(endpoint, options = {}) {
             try {
                 const response = await fetch(`${API_BASE}${endpoint}`, {
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                     },
                     ...options
                 });
                 const data = await response.json();
@@ -162,23 +311,30 @@
                 throw new Error(error.message || 'Network error');
             }
         }
-        
-        // Search functionality
+
+        // search
         searchForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             clearMessages();
-            showLoading();
-            
+            showLoading(message="Loading results");
+            analysisSection.classList.add('hidden');
+
             try {
                 const query = queryInput.value.trim();
                 const k = parseInt(kInput.value);
-                const merged = useMerged.checked;
-                
+
                 const data = await apiCall('/search', {
                     method: 'POST',
-                    body: JSON.stringify({ query, k, use_merged: merged })
+                    body: JSON.stringify({ query, k })
                 });
-                
+
+                // store results for analysis
+                lastSearchQuery = query;
+                lastSearchResults = data.results;
+
+                // analyze button if we have results
+                analyzeBtn.disabled = lastSearchResults.length === 0;
+
                 displayResults(data.results);
             } catch (error) {
                 showMessage(error.message);
@@ -186,18 +342,65 @@
                 hideLoading();
             }
         });
-        
-        // Stats functionality
+
+        // Image search
+        const imageUrlInput = document.getElementById('imageUrlInput');
+        const imageSearchBtn = document.getElementById('imageSearchBtn');
+
+        imageSearchBtn.addEventListener('click', async () => {
+            clearMessages();
+            showLoading("Searching by image");
+            analysisSection.classList.add('hidden');
+
+            try {
+                const imageUrl = imageUrlInput.value.trim();
+                const k = parseInt(kInput.value);
+
+                if (!imageUrl) {
+                    throw new Error('Please enter an image URL');
+                }
+
+                const data = await apiCall('/search_image', {
+                    method: 'POST',
+                    body: JSON.stringify({ image_url: imageUrl, k })
+                });
+
+                // Store results for analysis
+                lastSearchQuery = `Image: ${imageUrl}`;
+                lastSearchResults = data.results;
+
+                analyzeBtn.disabled = lastSearchResults.length === 0;
+
+                displayResults(data.results);
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // stats
         statsBtn.addEventListener('click', async () => {
             clearMessages();
-            showLoading();
-            
+            showLoading(message="Loading corpus");
+
             try {
                 const data = await apiCall('/stats');
-                document.getElementById('originalCount').textContent = data.original_embeddings;
-                document.getElementById('mergedCount').textContent = data.merged_embeddings;
-                document.getElementById('corpusSize').textContent = data.corpus_size || data.original_embeddings;
-                document.getElementById('mergedExists').textContent = data.merged_file_exists ? 'Yes' : 'No';
+                document.getElementById('totalCount').textContent = data.total_embeddings || 0;
+                document.getElementById('corpusFile').textContent = data.corpus_file || 'N/A';
+                document.getElementById('corpusExists').textContent = data.corpus_exists ? '✓ Yes' : '✗ No';
+
+                // type counts
+                const typeCounts = data.type_counts || {};
+                const typeCountsDiv = document.getElementById('typeCounts');
+                if (Object.keys(typeCounts).length > 0) {
+                    typeCountsDiv.innerHTML = Object.entries(typeCounts)
+                        .map(([type, count]) => `<span class="type-badge">${type}: ${count}</span>`)
+                        .join('');
+                } else {
+                    typeCountsDiv.textContent = 'No documents loaded';
+                }
+
                 statsSection.classList.remove('hidden');
             } catch (error) {
                 showMessage(error.message);
@@ -205,101 +408,240 @@
                 hideLoading();
             }
         });
-        
-        // URL addition functionality
-        urlForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+
+        // analysis 
+        analyzeBtn.addEventListener('click', async () => {
+            if (!lastSearchResults || lastSearchResults.length === 0) {
+                showMessage('No search results to analyze. Please perform a search first.');
+                return;
+            }
+
             clearMessages();
-            showLoading();
-            
+            showLoading(message="Analyzing results");
+            analysisSection.classList.add('hidden');
+
+            try {
+                const data = await apiCall('/analyze', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        query: lastSearchQuery,
+                        results: lastSearchResults
+                    })
+                });
+
+                if (data.error) {
+                    showMessage(data.error);
+                    if (data.instructions) {
+                        showMessage(data.instructions, 'error');
+                    }
+                } else {
+                    analysisText.innerHTML = data.analysis.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+                    analysisMeta.textContent = `Analyzed ${data.results_analyzed} of ${data.total_results} results`;
+                    analysisSection.classList.remove('hidden');
+
+                    // scroll to analysis
+                    analysisSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // load corpus
+        loadBtn.addEventListener('click', async () => {
+            clearMessages();
+            showLoading(message="Loading corpus");
+
+            try {
+                const data = await apiCall('/load', { method: 'POST' });
+                showMessage(data.message, 'success');
+                statsBtn.click(); // Refresh stats
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // save corpus
+        saveBtn.addEventListener('click', async () => {
+            clearMessages();
+            showLoading(message="Saving corpus");
+
+            try {
+                const data = await apiCall('/save', { method: 'POST' });
+                showMessage(data.message, 'success');
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // add urls
+        addUrlsBtn.addEventListener('click', async () => {
+            clearMessages();
+            showLoading(message="Adding URLs");
+
             try {
                 const urls = urlInput.value.split('\n').map(u => u.trim()).filter(u => u);
                 const titles = titleInput.value.split('\n').map(t => t.trim()).filter(t => t);
-                
+
                 if (urls.length === 0) {
                     throw new Error('Please enter at least one URL');
                 }
-                
+
                 const data = await apiCall('/add_urls', {
                     method: 'POST',
                     body: JSON.stringify({ urls, titles })
                 });
-                
-                showMessage(`Successfully added ${data.count} images`, 'success');
+
+                showMessage(data.message, 'success');
                 urlInput.value = '';
                 titleInput.value = '';
+                statsBtn.click(); // refresh stats
             } catch (error) {
                 showMessage(error.message);
             } finally {
                 hideLoading();
             }
         });
-        
-        // Merge functionality
-        mergeBtn.addEventListener('click', async () => {
+
+        // add files
+        addFilesBtn.addEventListener('click', async () => {
             clearMessages();
-            showLoading();
-            
+            showLoading(message="Adding files");
+
             try {
-                const data = await apiCall('/merge', { method: 'POST' });
-                showMessage(`Merged embeddings created with ${data.total_embeddings} embeddings`, 'success');
+                const filepaths = filePathsInput.value.split('\n').map(f => f.trim()).filter(f => f);
+                const titles = fileTitlesInput.value.split('\n').map(t => t.trim()).filter(t => t);
+
+                if (filepaths.length === 0) {
+                    throw new Error('Please enter at least one file path');
+                }
+
+                const data = await apiCall('/add_files', {
+                    method: 'POST',
+                    body: JSON.stringify({ filepaths, titles })
+                });
+
+                showMessage(data.message, 'success');
+                filePathsInput.value = '';
+                fileTitlesInput.value = '';
+                statsBtn.click(); // refresh stats
             } catch (error) {
                 showMessage(error.message);
             } finally {
                 hideLoading();
             }
         });
-        
-        // Display results
+
+        // add pdf
+        addPdfBtn.addEventListener('click', async () => {
+            clearMessages();
+            showLoading(message="Adding PDF");
+
+            try {
+                const pdfPath = pdfPathInput.value.trim();
+                const titlePrefix = pdfTitleInput.value.trim() || null;
+
+                if (!pdfPath) {
+                    throw new Error('Please enter a PDF path');
+                }
+
+                const data = await apiCall('/add_pdf', {
+                    method: 'POST',
+                    body: JSON.stringify({ pdf_path: pdfPath, title_prefix: titlePrefix })
+                });
+
+                showMessage(data.message, 'success');
+                pdfPathInput.value = '';
+                pdfTitleInput.value = '';
+                statsBtn.click(); // refresh stats
+            } catch (error) {
+                showMessage(error.message);
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // display results
         function displayResults(resultsList) {
             results.innerHTML = '';
-            
+
             if (!resultsList || resultsList.length === 0) {
-                results.innerHTML = '<p style="text-align: center; color: #666;">No results found</p>';
+                results.innerHTML = '<div class="section"><p style="text-align: center; color: #666;">No results found</p></div>';
                 return;
             }
-            
+
             resultsList.forEach(result => {
                 const div = document.createElement('div');
                 div.className = 'result-item';
-                
-                const sourceIcon = result.type === 'url' ? '🌐' : '📁';
-                const originalUrl = result.original_url || 'URL not available';
 
-                // Construct image preview HTML if image_path exists
-                const imagePreview = result.image_path ?
-                    `<div style="margin-top: 15px;">
-                        <img src="/${result.image_path}" alt="${result.title}"
-                             style="max-width: 100%; max-height: 400px; border: 1px solid #ddd; border-radius: 4px;"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <div style="display: none; background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-top: 5px;">
-                            Image preview not available: /${result.image_path}
-                        </div>
-                    </div>` : '';
+                const typeEmoji = {
+                    'url': '🌐',
+                    'file': '📁',
+                    'pdf': '📄',
+                    'original': '📚'
+                }[result.type] || '📄';
+
+                // citation badge if available
+                const citationBadge = result.has_citation
+                    ? '<div class="result-type" style="background: #e8f5e9; color: #2e7d32;">📖 Citation</div>'
+                    : '';
+
+                // original title display if citation is used
+                const originalTitleDisplay = result.has_citation && result.original_title
+                    ? `<div class="result-info" style="margin-top: 10px; font-size: 13px; color: #888;">
+                         Original title: <span class="code-text">${result.original_title}</span>
+                       </div>`
+                    : '';
 
                 div.innerHTML = `
                     <div class="result-header">
-                        <div class="result-title">${sourceIcon} ${result.title}</div>
-                        <div class="result-score">Rank ${result.rank} | Score: ${result.score.toFixed(3)}</div>
+                        <div class="result-title">${typeEmoji} ${result.title}</div>
+                        <div class="result-badges">
+                            <div class="result-score">Rank ${result.rank} | ${result.score.toFixed(3)}</div>
+                            <div class="result-type">${result.type}</div>
+                            ${citationBadge}
+                        </div>
                     </div>
-                    ${imagePreview}
-                    <div class="result-url">
-                        <strong>Original URL:</strong><br>
-                        <a href="${originalUrl}" target="_blank" rel="noopener noreferrer">${originalUrl}</a>
-                    </div>
-                    <div class="result-info">
-                        <strong>Source:</strong> <span class="result-source">${result.source}</span><br>
-                        <strong>Type:</strong> ${result.type}
-                        ${result.image_path ? `<br><strong>Path:</strong> <span class="result-source">${result.image_path}</span>` : ''}
+                    ${originalTitleDisplay}
+                    <div class="result-image">
+                        <a href="${getResourceLink(result)}" target="_blank" rel="noopener noreferrer">
+                            <img src="${getImageUrl(result)}"
+                                 alt="${result.title}"
+                                 onerror="this.parentElement.innerHTML='<div class=\\'image-error\\'>⚠️ Image failed to load</div>'">
+                        </a>
                     </div>
                 `;
-                
+
                 results.appendChild(div);
             });
         }
-        
-        
-        // Load stats on page load
+
+        // helper to determine image URL
+        function getImageUrl(result) {
+            if (result.source.startsWith('http://') || result.source.startsWith('https://')) {
+                return result.source;
+            }
+            if (result.doc_index !== undefined) {
+                return `/api/image/${result.doc_index}`;
+            }
+            const filename = result.source.split('/').pop();
+            return `/images/${filename}`;
+        }
+
+        // helper to construct clickable resource link
+        function getResourceLink(result) {
+            if (result.resource_url && result.segment_number !== undefined) {
+                return `${result.resource_url}?sp=${result.segment_number}`;
+            }
+            return result.source;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             statsBtn.click();
         });
