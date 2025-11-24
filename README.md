@@ -1,6 +1,6 @@
 # MapRAS: Retrieval-Augmented Search with ColPali
 
-## The current link can be found at: https://fb1f72e6cf8d.ngrok-free.app
+## The current link can be found at: http://mapras.com
 
 A visual search system for document retrieval using ColPali embeddings. Designed for searching large collections of historical documents and maps from the Library of Congress digital archives. 
 
